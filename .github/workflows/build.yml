@@ -1,4 +1,4 @@
-name: Build Executable
+name: Build AI Executable
 on: [push]
 jobs:
   build:
@@ -11,11 +11,11 @@ jobs:
           python-version: '3.9'
       - name: Install dependencies
         run: |
-          pip install python-docx pyinstaller
+          pip install python-docx google-generativeai pyinstaller
       - name: Build EXE
-        run: pyinstaller --onefile --noconsole ResumeMaker.py
+        run: pyinstaller --onefile --noconsole ResumeMaker_AI.py
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ResumeMaker-Exe
-          path: dist/ResumeMaker.exe
+          name: ResumeMaker-AI-Exe
+          path: dist/ResumeMaker_AI.exe

@@ -1,35 +1,33 @@
 import os
 import re
 import tkinter as tk
-from tkinter import messagebox, scrolledtext
+from tkinter import messagebox, scrolledtext, filedialog
 from docx import Document
 from collections import Counter
 from datetime import datetime
 
 class ResumeTailor:
     def __init__(self):
-        self.stop_words = {'and', 'the', 'with', 'our', 'you', 'will', 'for', 'requirements', 'experience', 'ability', 'work', 'team', 'highly', 'plus', 'preferred'}
-        self.industry_keywords = {'python', 'java', 'sql', 'project', 'management', 'agile', 'scrum', 'aws', 'cloud', 'data', 'leadership', 'strategy'}
+        self.stop_words = {'and', 'the', 'with', 'our', 'you', 'will', 'for', 'requirements', 'experience', 'ability', 'work', 'team'}
+        self.industry_keywords = {'python', 'java', 'sql', 'project', 'management', 'agile', 'scrum', 'aws', 'cloud', 'data'}
 
     def extract_keywords(self, text, num=6):
         words = re.findall(r'\w+', text.lower())
         filtered = [w for w in words if w not in self.stop_words and len(w) > 3]
         counts = Counter(filtered)
-        # Give industry-specific terms higher priority
         for word in counts:
             if word in self.industry_keywords:
                 counts[word] *= 2
         return ", ".join([w[0].capitalize() for w in counts.most_common(num)])
 
-    def generate(self, company, role, jd_text, years_exp, industry):
+    def generate(self, template_path, company, role, jd_text, years_exp, industry):
         try:
-            template = "master_resume.docx"
-            if not os.path.exists(template):
-                messagebox.showerror("Error", "Place 'master_resume.docx' in this folder first!")
+            if not template_path or not os.path.exists(template_path):
+                messagebox.showerror("Error", "Please select a valid 'master_resume.docx' file first!")
                 return
 
             skills = self.extract_keywords(jd_text)
-            doc = Document(template)
+            doc = Document(template_path)
             
             replacements = {
                 "{{COMPANY}}": company,
@@ -40,7 +38,6 @@ class ResumeTailor:
                 "{{DATE}}": datetime.now().strftime("%B %Y")
             }
 
-            # Recursive replacement in paragraphs and tables
             for p in doc.paragraphs:
                 for key, val in replacements.items():
                     if key in p.text:
@@ -53,12 +50,13 @@ class ResumeTailor:
                             if key in cell.text:
                                 cell.text = cell.text.replace(key, val)
 
-            if not os.path.exists("Tailored_Resumes"):
-                os.makedirs("Tailored_Resumes")
+            output_folder = os.path.join(os.path.expanduser("~"), "Desktop", "Tailored_Resumes")
+            if not os.path.exists(output_folder):
+                os.makedirs(output_folder)
 
-            output_path = f"Tailored_Resumes/Resume_{company.replace(' ', '_')}.docx"
+            output_path = f"{output_folder}/Resume_{company.replace(' ', '_')}.docx"
             doc.save(output_path)
-            messagebox.showinfo("Success", f"Resume Generated!\nLocation: {output_path}")
+            messagebox.showinfo("Success", f"Resume Generated on Desktop!\nFolder: {output_folder}")
         
         except Exception as e:
             messagebox.showerror("Error", str(e))
@@ -66,32 +64,18 @@ class ResumeTailor:
 def launch_gui():
     root = tk.Tk()
     root.title("AI Resume Tailor")
-    root.geometry("600x700")
+    root.geometry("600x750")
     
-    # Layout UI
-    tk.Label(root, text="Target Company:").pack(pady=5)
-    ent_comp = tk.Entry(root, width=50); ent_comp.pack()
+    # Template Selection
+    template_var = tk.StringVar()
+    tk.Label(root, text="Step 1: Select Your Master Template", font=("Arial", 10, "bold")).pack(pady=5)
     
-    tk.Label(root, text="Target Role:").pack(pady=5)
-    ent_role = tk.Entry(root, width=50); ent_role.pack()
+    def browse_file():
+        filename = filedialog.askopenfilename(filetypes=[("Word files", "*.docx")])
+        template_var.set(filename)
 
-    tk.Label(root, text="Years of Experience / Industry (e.g., 5+ / FinTech):").pack(pady=5)
-    ent_meta = tk.Entry(root, width=50); ent_meta.pack()
+    tk.Button(root, text="Browse for master_resume.docx", command=browse_file).pack()
+    tk.Label(root, textvariable=template_var, fg="blue", wraplength=500).pack(pady=5)
 
-    tk.Label(root, text="Paste Job Description:").pack(pady=5)
-    txt_jd = scrolledtext.ScrolledText(root, height=15, width=65); txt_jd.pack()
-
-    tailor = ResumeTailor()
-    
-    def on_click():
-        meta = ent_meta.get().split("/")
-        y = meta[0].strip() if len(meta) > 0 else "X"
-        i = meta[1].strip() if len(meta) > 1 else "Tech"
-        tailor.generate(ent_comp.get(), ent_role.get(), txt_jd.get("1.0", tk.END), y, i)
-
-    tk.Button(root, text="GENERATE CUSTOM RESUME", bg="#2ecc71", fg="white", 
-              font=("Arial", 12, "bold"), command=on_click).pack(pady=20)
-    root.mainloop()
-
-if __name__ == "__main__":
-    launch_gui()
+    # Inputs
+    tk.

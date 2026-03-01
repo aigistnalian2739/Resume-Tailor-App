@@ -1,0 +1,21 @@
+name: Build Executable
+on: [push]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          pip install python-docx pyinstaller
+      - name: Build EXE
+        run: pyinstaller --onefile --noconsole ResumeMaker.py
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ResumeMaker-Exe
+          path: dist/ResumeMaker.exe

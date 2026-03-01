@@ -1,0 +1,5 @@
+Tailored_Resumes/
+dist/
+build/
+*.spec
+__pycache__/
